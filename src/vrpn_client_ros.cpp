@@ -226,6 +226,7 @@ namespace vrpn_client_ros
 
   void VRPN_CALLBACK VrpnTrackerRos::handle_twist(void *userData, const vrpn_TRACKERVELCB tracker_twist)
   {
+  
     VrpnTrackerRos *tracker = static_cast<VrpnTrackerRos *>(userData);
 
     ros::Publisher *twist_pub;

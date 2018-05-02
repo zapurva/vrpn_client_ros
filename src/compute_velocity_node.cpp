@@ -7,17 +7,19 @@
 class ComputeVelocity
 {
 public:
-    
+    //Parent Constructor used for the initializations
     ComputeVelocity(
         const std::string& worldFrame,
         const std::string& frame,
         const ros::NodeHandle& n)
         : m_worldFrame(worldFrame)
         , m_frame(frame)
+        , m_pubVel()
         , m_listenPose()
     {
         ros::NodeHandle nh;
         m_listenPose.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0));
+        m_pubVel = nh.advertise<geometry_msgs::TwistStamped>("twist", 1);
         //m_subscribePose = nh.subscribe("pose", 1, &ComputeVelocity::getPoseCallback, this);
     }
     
@@ -52,6 +54,7 @@ private:
         {
             tempX += transform.getOrigin().x();
             tempY += transform.getOrigin().y();
+            tempZ += transform.getOrigin().z();
         }
         currX = tempX/10;
         tempX = 0.0;
@@ -63,16 +66,38 @@ private:
         dVy = (currY - prevY)/dt;
         prevY = currY;
 
-        ROS_INFO ("dVx = %f, dVy = %f", dVx, dVy);
+        currZ = tempZ/10;
+        tempZ = 0.0;
+        dVz = (currZ - prevZ)/dt;
+        prevZ = currZ;
+
+        //ROS_INFO ("dVx = %f, dVy = %f, dVz = %f", dVx, dVy, dVz);
+
+        geometry_msgs::TwistStamped computedTwist;
+        computedTwist.header.stamp = transform.stamp_;
+        computedTwist.header.frame_id = m_worldFrame;
+        computedTwist.twist.linear.x = dVx;
+        computedTwist.twist.linear.y = dVy;
+        computedTwist.twist.linear.z = dVz;
+
+        computedTwist.twist.angular.x = 0.0;
+        computedTwist.twist.angular.y = 0.0;  
+        computedTwist.twist.angular.z = 0.0;  
+
+        //ROS_INFO("vel_x = %f", computedTwist.twist.linear.x);
+        m_pubVel.publish(computedTwist);
     }
 
 private:
     std::string m_worldFrame;
     std::string m_frame;
     tf::TransformListener m_listenPose;
+    ros::Publisher m_pubVel;
 
     float tempX = 0.0, currX = 0.0, dVx = 0.0, prevX = 0.0;
     float tempY = 0.0, currY = 0.0, dVy = 0.0, prevY = 0.0;
+    float tempZ = 0.0, currZ = 0.0, dVz = 0.0, prevZ = 0.0;
+    
     //geometry_msgs::PoseStamped m_getPose;
     //ros::Subscriber m_subscribePose;
 

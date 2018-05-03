@@ -50,42 +50,62 @@ private:
         //ROS_INFO("dt = %f", dt);
 
         //Calculate velocity here
-        for (int i = 1; i <= 10; i++)
+        for (int i = 1; i <= 5; i++)
         {
             tempX += transform.getOrigin().x();
             tempY += transform.getOrigin().y();
             tempZ += transform.getOrigin().z();
         }
-        currX = tempX/10;
+        currX = tempX/5;
         tempX = 0.0;
-        dVx = (currX - prevX)/dt;
-        prevX = currX;
-
-        currY = tempY/10;
+        Vx = (currX - prevX)/dt;
+        
+        currY = tempY/5;
         tempY = 0.0;
-        dVy = (currY - prevY)/dt;
-        prevY = currY;
-
-        currZ = tempZ/10;
+        Vy = (currY - prevY)/dt;
+        
+        currZ = tempZ/5;
         tempZ = 0.0;
-        dVz = (currZ - prevZ)/dt;
-        prevZ = currZ;
+        Vz = (currZ - prevZ)/dt;
+        
+        for (int i = 1; i <= 5; i++)
+        {
+            tempX +=Vx;
+            tempY +=Vy;
+            tempZ +=Vz;
+        }
+
+        averageVx = tempX/5;
+        averageVy = tempY/5;
+        averageVz = tempZ/5;
+        tempX = 0.0;
+        tempY = 0.0;
+        tempZ = 0.0;
+
+        filteredVx = averageVx * (1 - 0.5) + filteredVx * 0.5;
+        filteredVy = averageVx * (1 - 0.5) + filteredVy * 0.5;
+        filteredVz = averageVx * (1 - 0.5) + filteredVz * 0.5;
 
         //ROS_INFO ("dVx = %f, dVy = %f, dVz = %f", dVx, dVy, dVz);
 
         geometry_msgs::TwistStamped computedTwist;
         computedTwist.header.stamp = transform.stamp_;
         computedTwist.header.frame_id = m_worldFrame;
-        computedTwist.twist.linear.x = dVx;
-        computedTwist.twist.linear.y = dVy;
-        computedTwist.twist.linear.z = dVz;
+        computedTwist.twist.linear.x = filteredVx;
+        computedTwist.twist.linear.y = filteredVy;
+        computedTwist.twist.linear.z = filteredVz;
 
         computedTwist.twist.angular.x = 0.0;
         computedTwist.twist.angular.y = 0.0;  
         computedTwist.twist.angular.z = 0.0;  
 
-        //ROS_INFO("vel_x = %f", computedTwist.twist.linear.x);
+        //ROS_INFO("x = %f, vel_x = %f", transform.getOrigin().x(), computedTwist.twist.linear.x);
         m_pubVel.publish(computedTwist);
+
+        prevX = currX;
+        prevY = currY;
+        prevZ = currZ;
+
     }
 
 private:
@@ -94,9 +114,9 @@ private:
     tf::TransformListener m_listenPose;
     ros::Publisher m_pubVel;
 
-    float tempX = 0.0, currX = 0.0, dVx = 0.0, prevX = 0.0;
-    float tempY = 0.0, currY = 0.0, dVy = 0.0, prevY = 0.0;
-    float tempZ = 0.0, currZ = 0.0, dVz = 0.0, prevZ = 0.0;
+    float tempX = 0.0, currX = 0.0, Vx = 0.0, prevX = 0.0, averageVx=0.0, filteredVx = 0.0;
+    float tempY = 0.0, currY = 0.0, Vy = 0.0, prevY = 0.0, averageVy=0.0, filteredVy = 0.0;
+    float tempZ = 0.0, currZ = 0.0, Vz = 0.0, prevZ = 0.0, averageVz=0.0, filteredVz = 0.0;
     
     //geometry_msgs::PoseStamped m_getPose;
     //ros::Subscriber m_subscribePose;

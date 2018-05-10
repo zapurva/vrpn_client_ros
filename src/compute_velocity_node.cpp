@@ -19,7 +19,7 @@ public:
     {
         ros::NodeHandle nh;
         m_listenPose.waitForTransform(m_worldFrame, m_frame, ros::Time(0), ros::Duration(10.0));
-        m_pubVel = nh.advertise<geometry_msgs::TwistStamped>("twist", 1);
+        m_pubVel = nh.advertise<geometry_msgs::TwistStamped>(m_frame+"/twist", 1);
         //m_subscribePose = nh.subscribe("pose", 1, &ComputeVelocity::getPoseCallback, this);
     }
     
